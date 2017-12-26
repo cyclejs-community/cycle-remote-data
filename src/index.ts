@@ -66,11 +66,13 @@ export function makeRemoteDataDriver () {
   return function remoteDataDriver () {
     const remoteDataSources = {
       get(url: string): MemoryStream<RemoteData> {
+        let req;
+
         return xs.createWithMemory({
           start (listener) {
             listener.next(Loading)
 
-            superagent.get(url).end((err, res) => {
+            req = superagent.get(url).end((err, res) => {
               if (err) {
                 listener.next(ErrorResponse(err));
               } else {
@@ -79,7 +81,9 @@ export function makeRemoteDataDriver () {
             });
           },
 
-          stop () {}
+          stop () {
+            req.abort();
+          }
         })
 
       }

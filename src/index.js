@@ -43,10 +43,11 @@ function makeRemoteDataDriver() {
     return function remoteDataDriver() {
         var remoteDataSources = {
             get: function (url) {
+                var req;
                 return xstream_1["default"].createWithMemory({
                     start: function (listener) {
                         listener.next(Loading);
-                        superagent.get(url).end(function (err, res) {
+                        req = superagent.get(url).end(function (err, res) {
                             if (err) {
                                 listener.next(ErrorResponse(err));
                             }
@@ -55,7 +56,9 @@ function makeRemoteDataDriver() {
                             }
                         });
                     },
-                    stop: function () { }
+                    stop: function () {
+                        req.abort();
+                    }
                 });
             }
         };

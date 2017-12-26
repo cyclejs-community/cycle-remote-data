@@ -17,7 +17,13 @@ function GithubSearch(sources) {
     var reload$ = sources.DOM.select('.reload').events('click');
     var data$ = xstream_1["default"].merge(finishedTyping$, reload$).map(function () { return query$.take(1); }).flatten();
     var post$ = data$
-        .map(function (q) { return q === '' ? xstream_1["default"].of(src_1.NotAsked) : sources.RemoteData.get('/?' + q); })
+        .map(function (q) {
+        if (q === '') {
+            return xstream_1["default"].of(src_1.NotAsked);
+        }
+        ;
+        return sources.RemoteData.get('/?' + q);
+    })
         .flatten()
         .map(function (remoteData) { return remoteData.rmap(function (res) { return res.body; }); })
         .startWith(src_1.NotAsked);
@@ -11702,10 +11708,11 @@ function makeRemoteDataDriver() {
     return function remoteDataDriver() {
         var remoteDataSources = {
             get: function (url) {
+                var req;
                 return xstream_1["default"].createWithMemory({
                     start: function (listener) {
                         listener.next(Loading);
-                        superagent.get(url).end(function (err, res) {
+                        req = superagent.get(url).end(function (err, res) {
                             if (err) {
                                 listener.next(ErrorResponse(err));
                             }
@@ -11714,7 +11721,9 @@ function makeRemoteDataDriver() {
                             }
                         });
                     },
-                    stop: function () { }
+                    stop: function () {
+                        req.abort();
+                    }
                 });
             }
         };

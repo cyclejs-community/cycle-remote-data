@@ -16,7 +16,13 @@ function GithubSearch(sources) {
     var reload$ = sources.DOM.select('.reload').events('click');
     var data$ = xstream_1["default"].merge(finishedTyping$, reload$).map(function () { return query$.take(1); }).flatten();
     var post$ = data$
-        .map(function (q) { return q === '' ? xstream_1["default"].of(src_1.NotAsked) : sources.RemoteData.get('/?' + q); })
+        .map(function (q) {
+        if (q === '') {
+            return xstream_1["default"].of(src_1.NotAsked);
+        }
+        ;
+        return sources.RemoteData.get('/?' + q);
+    })
         .flatten()
         .map(function (remoteData) { return remoteData.rmap(function (res) { return res.body; }); })
         .startWith(src_1.NotAsked);
