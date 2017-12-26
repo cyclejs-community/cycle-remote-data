@@ -6,7 +6,7 @@ import xs from 'xstream';
 
 function GithubSearch(sources) {
   const query$ = sources.DOM
-    .select('.search')
+    .select('.search-query')
     .events('input')
     .map(ev => ev.target.value)
     .remember();
@@ -14,12 +14,19 @@ function GithubSearch(sources) {
   const finishedTyping$ = query$
     .compose(sources.Time.debounce(250));
 
+  const search$ = sources.DOM
+    .select('.search')
+    .events('click');
+
   const reload$ = sources.DOM.select('.reload').events('click');
 
   const data$ = xs.merge(
     finishedTyping$,
-    reload$
+    reload$,
+    search$
   ).map(() => query$.take(1)).flatten()
+
+  const loadingProgress$ = sources.Time.periodic(300).map(i => (i % 3) + 1);
 
   const post$ = data$
     .map(q => {
@@ -32,17 +39,18 @@ function GithubSearch(sources) {
     .startWith(NotAsked);
 
   return {
-    DOM: post$.map(view)
+    DOM: xs.combine(post$, loadingProgress$).map(view)
   }
 }
 
-function view(remotePost) {
+function view([remotePost, loadingProgress]) {
   return div([
-    'Search github',
-    input('.search'),
+    div('Search github'),
+    input('.search-query'),
+    button('.search', 'Search'),
 
     remotePost.match({
-      Loading: loadingView,
+      Loading: () => loadingView(loadingProgress),
       Error: errorView,
       Ok: postsView,
       NotAsked: notAskedView
@@ -57,9 +65,9 @@ function errorView() {
   ])
 }
 
-function loadingView() {
+function loadingView(progress) {
   return div([
-    'Loading...'
+    'Loading' + Array(progress).fill('.').join('')
   ])
 }
 

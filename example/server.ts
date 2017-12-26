@@ -44,7 +44,7 @@ const server = http.createServer((req, res) => {
 
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify(results.filter(r => r.name.indexOf(q) !== -1)));
-  }, Math.random() * 1000);
+  }, Math.random() * 3000);
 });
 
 server.listen(8080);

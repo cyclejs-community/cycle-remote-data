@@ -7,14 +7,18 @@ var run_1 = require("@cycle/run");
 var xstream_1 = require("xstream");
 function GithubSearch(sources) {
     var query$ = sources.DOM
-        .select('.search')
+        .select('.search-query')
         .events('input')
         .map(function (ev) { return ev.target.value; })
         .remember();
     var finishedTyping$ = query$
         .compose(sources.Time.debounce(250));
+    var search$ = sources.DOM
+        .select('.search')
+        .events('click');
     var reload$ = sources.DOM.select('.reload').events('click');
-    var data$ = xstream_1["default"].merge(finishedTyping$, reload$).map(function () { return query$.take(1); }).flatten();
+    var data$ = xstream_1["default"].merge(finishedTyping$, reload$, search$).map(function () { return query$.take(1); }).flatten();
+    var loadingProgress$ = sources.Time.periodic(300).map(function (i) { return (i % 3) + 1; });
     var post$ = data$
         .map(function (q) {
         if (q === '') {
@@ -27,15 +31,17 @@ function GithubSearch(sources) {
         .map(function (remoteData) { return remoteData.rmap(function (res) { return res.body; }); })
         .startWith(src_1.NotAsked);
     return {
-        DOM: post$.map(view)
+        DOM: xstream_1["default"].combine(post$, loadingProgress$).map(view)
     };
 }
-function view(remotePost) {
+function view(_a) {
+    var remotePost = _a[0], loadingProgress = _a[1];
     return dom_1.div([
-        'Search github',
-        dom_1.input('.search'),
+        dom_1.div('Search github'),
+        dom_1.input('.search-query'),
+        dom_1.button('.search', 'Search'),
         remotePost.match({
-            Loading: loadingView,
+            Loading: function () { return loadingView(loadingProgress); },
             Error: errorView,
             Ok: postsView,
             NotAsked: notAskedView
@@ -48,9 +54,9 @@ function errorView() {
         dom_1.button('.reload', "Reload")
     ]);
 }
-function loadingView() {
+function loadingView(progress) {
     return dom_1.div([
-        'Loading...'
+        'Loading' + Array(progress).fill('.').join('')
     ]);
 }
 function notAskedView() {
