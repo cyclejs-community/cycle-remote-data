@@ -1,0 +1,22 @@
+{
+  "name": "cycle-remote-data",
+  "version": "1.0.0",
+  "description": "USAGE: common-readme [-r|--repo REPO-NAME] [-l|--license LICENSE]",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha --compilers ts:ts-node/register"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@cycle/time": "^0.10.1",
+    "@types/mocha": "^2.2.44",
+    "@types/node": "^8.0.49",
+    "mocha": "^4.0.1",
+    "superagent": "^3.6.0",
+    "ts-node": "^3.3.0",
+    "typescript": "^2.5.3",
+    "xstream": "^11.0.0"
+  }
+}
