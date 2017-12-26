@@ -13,9 +13,12 @@
     "@cycle/time": "^0.10.1",
     "@types/mocha": "^2.2.44",
     "@types/node": "^8.0.49",
+    "browserify": "^14.5.0",
     "mocha": "^4.0.1",
     "superagent": "^3.6.0",
+    "through2": "^2.0.3",
     "ts-node": "^3.3.0",
+    "tsify": "^3.0.3",
     "typescript": "^2.5.3",
     "xstream": "^11.0.0"
   }

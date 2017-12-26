@@ -9,14 +9,19 @@ interface Cases<T> {
 }
 
 export interface RemoteData {
-  match<T>(cases: Cases<T>): T
+  match<T>(cases: Cases<T>): T;
+  rmap(f: (a: any) => any): RemoteData;
 };
 
-const NotAsked = {
+export const NotAsked = {
   type: 'NotAsked',
 
   match<T> (cases: Cases<T>) {
     return cases.NotAsked();
+  },
+
+  rmap (f) {
+    return NotAsked;
   }
 }
 
@@ -25,6 +30,10 @@ const Loading = {
 
   match<T> (cases: Cases<T>) {
     return cases.Loading();
+  },
+
+  rmap (f) {
+    return Loading;
   }
 }
 
@@ -33,6 +42,10 @@ const ErrorResponse = (err: Error) => ({
 
   match<T>(cases: Cases<T>) {
     return cases.Error(err);
+  },
+
+  rmap (f) {
+    return ErrorResponse(err);
   }
 })
 
@@ -41,6 +54,10 @@ const Ok = (response: superagent.Response) => ({
   type: 'Ok',
   match<T>(cases: Cases<T>) {
     return cases.Ok(response);
+  },
+
+  rmap (f) {
+    return Ok(f(response));
   }
 })
 
