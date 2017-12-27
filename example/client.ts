@@ -1,7 +1,13 @@
-import {makeRemoteDataDriver, RemoteDataSource, RemoteResponse, NotAsked, RemoteData} from '../src';
-import {makeDOMDriver, DOMSource, div, input, button, pre} from '@cycle/dom';
-import {timeDriver, TimeSource} from '@cycle/time';
-import {run} from '@cycle/run';
+import {
+  makeRemoteDataDriver,
+  RemoteDataSource,
+  RemoteResponse,
+  NotAsked,
+  RemoteData
+} from '../src';
+import { makeDOMDriver, DOMSource, div, input, button, pre } from '@cycle/dom';
+import { timeDriver, TimeSource } from '@cycle/time';
+import { run } from '@cycle/run';
 import xs from 'xstream';
 
 interface Sources {
@@ -22,40 +28,37 @@ function GithubSearch(sources: Sources) {
     .map(ev => (ev.target as HTMLInputElement).value)
     .remember();
 
-  const finishedTyping$ = query$
-    .compose(sources.Time.debounce(250));
+  const finishedTyping$ = query$.compose(sources.Time.debounce(250));
 
-  const searchClick$ = sources.DOM
-    .select('.search')
-    .events('click');
+  const searchClick$ = sources.DOM.select('.search').events('click');
 
   const reload$ = sources.DOM.select('.reload').events('click');
 
-  const search$ = xs.merge(
-    finishedTyping$,
-    reload$,
-    searchClick$
-  )
+  const search$ = xs.merge(finishedTyping$, reload$, searchClick$);
 
-  const data$ = search$.map(() => query$.take(1).filter(() => true)).flatten()
+  const data$ = search$.map(() => query$.take(1)).flatten();
 
-  const loadingProgress$ = sources.Time.periodic(300).map(i => (i % 3) + 1);
+  const loadingProgress$ = sources.Time.periodic(300).map(i => i % 3 + 1);
 
   const remoteData$ = data$
     .map(query => {
-      if (query === '') { return xs.of(NotAsked).remember() };
+      if (query === '') {
+        return xs.of(NotAsked).remember();
+      }
 
-      return sources.RemoteData.get('/?' + query)
+      return sources.RemoteData.get('/?' + query);
     })
-    .flatten()
+    .flatten();
 
   const post$ = remoteData$
-    .map((remoteData: RemoteResponse) => remoteData.rmap(res => res.body as Result[]))
+    .map((remoteData: RemoteResponse) =>
+      remoteData.rmap(res => res.body as Result[])
+    )
     .startWith(NotAsked);
 
   return {
     DOM: xs.combine(post$, loadingProgress$).map(view)
-  }
+  };
 }
 
 function view([remotePost, loadingProgress]: [RemoteData<Result[]>, number]) {
@@ -70,26 +73,24 @@ function view([remotePost, loadingProgress]: [RemoteData<Result[]>, number]) {
       Ok: resultsView,
       NotAsked: notAskedView
     })
-  ])
+  ]);
 }
 
 function errorView() {
-  return div([
-    'Error loading content',
-    button('.reload', "Reload")
-  ])
+  return div(['Error loading content', button('.reload', 'Reload')]);
 }
 
 function loadingView(progress: number) {
   return div([
-    'Loading' + Array(progress).fill('.').join('')
-  ])
+    'Loading' +
+      Array(progress)
+        .fill('.')
+        .join('')
+  ]);
 }
 
 function notAskedView() {
-  return div([
-    'Search for something!'
-  ])
+  return div(['Search for something!']);
 }
 
 function resultsView(results: Result[]) {
@@ -104,6 +105,6 @@ const drivers = {
   DOM: makeDOMDriver(document.body),
   RemoteData: makeRemoteDataDriver(),
   Time: timeDriver
-}
+};
 
 run(GithubSearch, drivers);
