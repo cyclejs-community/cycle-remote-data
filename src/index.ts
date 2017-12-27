@@ -66,7 +66,7 @@ function Ok<T>(value: T): RemoteData<T> {
 
 
 export function makeRemoteDataDriver () {
-  return function remoteDataDriver () {
+  return function remoteDataDriver (): RemoteDataSource {
     const remoteDataSources = {
       get(url: string): MemoryStream<RemoteData<superagent.Response>> {
         let request: superagent.Request;
