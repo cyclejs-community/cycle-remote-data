@@ -2,7 +2,30 @@
 
 > USAGE: common-readme [-r|--repo REPO-NAME] [-l|--license LICENSE]
 
-background details relevant to understanding what this module does
+`cycle-remote-data` is a library for requesting data from servers. Have you ever found with `@cycle/http` that you forget to handle errors or to show a loading message?
+
+With `cycle-remote-data`, you can call `sources.RemoteData.get(url, options)`, which returns a `MemoryStream` of `RemoteData` objects.
+
+There are four possible states: Loading, Error, Ok and NotAsked. When working with `RemoteData` objects, we match over these possibilities.
+
+If you're using TypeScript, in strict mode you will be forced to handle all cases, which is worthwhile if you don't want runtime errors.
+
+E.g.
+
+```js
+const data$ = sources.RemoteData.get('https://github.com/search?q=cycle');
+
+data$.map(remoteData =>
+  remoteData.match({
+    NotAsked: () => 'Request some data!',
+    Loading: () => 'Loading...',
+    Error: (err) => 'An error occurred while loading the data.',
+    Ok: (response) => 'Result: ' + response.body
+  })
+)
+```
+
+As the request loads and succeeds or fails, new RemoteData objects representing the current state will be emitted.
 
 ## Usage
 
@@ -52,10 +75,7 @@ function errorView() {
 }
 
 function loadingView() {
-  return div([
-    'Error loading content',
-    button('.reload', "Reload")
-  ])
+  return div('Loading...')
 }
 
 function notAskedView() {
