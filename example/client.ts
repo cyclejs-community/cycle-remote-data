@@ -46,7 +46,7 @@ function GithubSearch(sources: Sources) {
         return xs.of(NotAsked).remember();
       }
 
-      return sources.RemoteData.get('/?' + query);
+      return sources.RemoteData.get(`/?${query}`);
     })
     .flatten();
 
