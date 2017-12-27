@@ -1,78 +1,81 @@
 import * as superagent from 'superagent';
 import xs, {MemoryStream} from 'xstream';
 
-interface Cases<T> {
-  NotAsked: () => T;
-  Loading: () => T;
-  Error: (err: Error) => T;
-  Ok: (response: superagent.Response) => T;
+export interface RemoteDataSource {
+  get(url: string): MemoryStream<RemoteResponse>;
 }
 
-export interface RemoteData {
-  match<T>(cases: Cases<T>): T;
-  rmap(f: (a: any) => any): RemoteData;
+interface Cases<T, U> {
+  NotAsked: () => U;
+  Loading: () => U;
+  Error: (err: Error) => U;
+  Ok: (value: T) => U;
+}
+
+export interface RemoteData<T> {
+  when<U>(cases: Cases<T, U>): U;
+  rmap<V>(f: (v: T) => V): RemoteData<V>;
 };
 
-export const NotAsked = {
-  type: 'NotAsked',
+export type RemoteResponse = RemoteData<superagent.Response>;
 
-  match<T> (cases: Cases<T>) {
+export const NotAsked = {
+  when<U> (cases: Cases<any, U>): U {
     return cases.NotAsked();
   },
 
-  rmap (f) {
+  rmap () {
     return NotAsked;
   }
 }
 
 const Loading = {
-  type: 'Loading',
-
-  match<T> (cases: Cases<T>) {
+  when<U> (cases: Cases<any, U>): U {
     return cases.Loading();
   },
 
-  rmap (f) {
+  rmap () {
     return Loading;
   }
 }
 
-const ErrorResponse = (err: Error) => ({
-  type: 'Error',
+function ErrorResponse (err: Error): RemoteData<any> {
+  return {
+    when<U>(cases: Cases<any, U>): U {
+      return cases.Error(err);
+    },
 
-  match<T>(cases: Cases<T>) {
-    return cases.Error(err);
-  },
-
-  rmap (f) {
-    return ErrorResponse(err);
+    rmap () {
+      return ErrorResponse(err);
+    }
   }
-})
+}
 
 
-const Ok = (response: superagent.Response) => ({
-  type: 'Ok',
-  match<T>(cases: Cases<T>) {
-    return cases.Ok(response);
-  },
+function Ok<T>(value: T): RemoteData<T> {
+  return {
+    when<U>(cases: Cases<T, U>): U {
+      return cases.Ok(value);
+    },
 
-  rmap (f) {
-    return Ok(f(response));
+    rmap<V> (f: (t: T) => V): RemoteData<V> {
+      return Ok(f(value));
+    }
   }
-})
+}
 
 
 export function makeRemoteDataDriver () {
   return function remoteDataDriver () {
     const remoteDataSources = {
-      get(url: string): MemoryStream<RemoteData> {
-        let req;
+      get(url: string): MemoryStream<RemoteData<superagent.Response>> {
+        let request: superagent.Request;
 
         return xs.createWithMemory({
           start (listener) {
             listener.next(Loading)
 
-            req = superagent.get(url).end((err, res) => {
+            request = superagent.get(url).end((err, res) => {
               if (err) {
                 listener.next(ErrorResponse(err));
               } else {
@@ -82,7 +85,7 @@ export function makeRemoteDataDriver () {
           },
 
           stop () {
-            req.abort();
+            request.abort();
           }
         })
 

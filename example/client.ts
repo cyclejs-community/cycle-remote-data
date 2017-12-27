@@ -1,41 +1,56 @@
-import {makeRemoteDataDriver, NotAsked} from '../src';
-import {makeDOMDriver, div, input, button, pre} from '@cycle/dom';
-import {timeDriver} from '@cycle/time';
+import {makeRemoteDataDriver, RemoteDataSource, RemoteResponse, NotAsked, RemoteData} from '../src';
+import {makeDOMDriver, DOMSource, div, input, button, pre} from '@cycle/dom';
+import {timeDriver, TimeSource} from '@cycle/time';
 import {run} from '@cycle/run';
 import xs from 'xstream';
 
-function GithubSearch(sources) {
+interface Sources {
+  DOM: DOMSource;
+  Time: TimeSource;
+  RemoteData: RemoteDataSource;
+}
+
+interface Result {
+  name: string;
+  value: string;
+}
+
+function GithubSearch(sources: Sources) {
   const query$ = sources.DOM
     .select('.search-query')
     .events('input')
-    .map(ev => ev.target.value)
+    .map(ev => (ev.target as HTMLInputElement).value)
     .remember();
 
   const finishedTyping$ = query$
     .compose(sources.Time.debounce(250));
 
-  const search$ = sources.DOM
+  const searchClick$ = sources.DOM
     .select('.search')
     .events('click');
 
   const reload$ = sources.DOM.select('.reload').events('click');
 
-  const data$ = xs.merge(
+  const search$ = xs.merge(
     finishedTyping$,
     reload$,
-    search$
-  ).map(() => query$.take(1)).flatten()
+    searchClick$
+  )
+
+  const data$ = search$.map(() => query$.take(1).filter(() => true)).flatten()
 
   const loadingProgress$ = sources.Time.periodic(300).map(i => (i % 3) + 1);
 
-  const post$ = data$
-    .map(q => {
-      if (q === '') { return xs.of(NotAsked) };
+  const remoteData$ = data$
+    .map(query => {
+      if (query === '') { return xs.of(NotAsked).remember() };
 
-      return sources.RemoteData.get('/?' + q);
+      return sources.RemoteData.get('/?' + query)
     })
     .flatten()
-    .map(remoteData => remoteData.rmap(res => res.body))
+
+  const post$ = remoteData$
+    .map((remoteData: RemoteResponse) => remoteData.rmap(res => res.body as Result[]))
     .startWith(NotAsked);
 
   return {
@@ -43,16 +58,16 @@ function GithubSearch(sources) {
   }
 }
 
-function view([remotePost, loadingProgress]) {
+function view([remotePost, loadingProgress]: [RemoteData<Result[]>, number]) {
   return div([
     div('Search github'),
     input('.search-query'),
     button('.search', 'Search'),
 
-    remotePost.match({
+    remotePost.when({
       Loading: () => loadingView(loadingProgress),
       Error: errorView,
-      Ok: postsView,
+      Ok: resultsView,
       NotAsked: notAskedView
     })
   ])
@@ -65,7 +80,7 @@ function errorView() {
   ])
 }
 
-function loadingView(progress) {
+function loadingView(progress: number) {
   return div([
     'Loading' + Array(progress).fill('.').join('')
   ])
@@ -77,12 +92,12 @@ function notAskedView() {
   ])
 }
 
-function postsView(posts) {
-  if (posts.length === 0) {
+function resultsView(results: Result[]) {
+  if (results.length === 0) {
     return div('No results found');
   }
 
-  return div(posts.map(post => div('.post', post.name + ' - ' + post.value)));
+  return div(results.map(post => div('.post', post.name + ' - ' + post.value)));
 }
 
 const drivers = {

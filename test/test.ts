@@ -1,7 +1,7 @@
 import * as assert from 'assert';
 import * as superagent from 'superagent';
 import * as http from 'http';
-import { makeRemoteDataDriver, RemoteData } from '../src/';
+import { makeRemoteDataDriver, RemoteResponse } from '../src/';
 
 
 const server = http.createServer(function (req, res) {
@@ -22,8 +22,8 @@ describe('remoteDataDriver', () => {
   it('allows fetching remote data', (done) => {
     const driver = makeRemoteDataDriver()();
 
-    function f (remoteData: RemoteData) {
-      return remoteData.match({
+    function f (remoteData: RemoteResponse) {
+      return remoteData.when({
         Ok (response) { return response.body },
         Loading () { return {status: 'loading'} },
         Error () { return {status: 'error'} },
@@ -50,8 +50,8 @@ describe('remoteDataDriver', () => {
   it('handles errors', (done) => {
     const driver = makeRemoteDataDriver()();
 
-    function f (remoteData: RemoteData) {
-      return remoteData.match({
+    function f (remoteData: RemoteResponse) {
+      return remoteData.when({
         Ok (response) { return response.body },
         Loading () { return {status: 'loading'} },
         Error () { return {status: 'error'} },
