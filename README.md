@@ -1,7 +1,5 @@
 # cycle-remote-data
 
-> USAGE: common-readme [-r|--repo REPO-NAME] [-l|--license LICENSE]
-
 `cycle-remote-data` is a library for requesting data from servers. Have you ever found with `@cycle/http` that you forget to handle errors or to show a loading message?
 
 With `cycle-remote-data`, you can call `sources.RemoteData.get(url, options)`, which returns a `MemoryStream` of `RemoteData` objects.
@@ -91,36 +89,13 @@ function postsView(posts) {
 }
 ```
 
-outputs
-
-```
-hello warld
-```
-
-## API
-
-```js
-var cycleRemoteData = require('cycle-remote-data')
-```
-
-See [api_formatting.md](api_formatting.md) for tips.
-
 ## Install
 
-With [npm](https://npmjs.org/) installed, run
-
-```
-$ npm install cycle-remote-data
-```
+Not yet published.
 
 ## Acknowledgments
 
-cycle-remote-data was inspired by..
-
-## See Also
-
-- [`noffle/common-readme`](https://github.com/noffle/common-readme)
-- ...
+cycle-remote-data was inspired by [krisajenkins/remotedata](https://github.com/krisajenkins/remotedata)
 
 ## License
 
