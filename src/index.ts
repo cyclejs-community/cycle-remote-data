@@ -7,7 +7,7 @@ export interface RemoteDataSource {
   request(options: RequestOptions): MemoryStream<RemoteResponse>;
 }
 
-interface Cases<T, U> {
+export interface Cases<T, U> {
   NotAsked: () => U;
   Loading: (progress: number) => U;
   Error: (err: Error) => U;

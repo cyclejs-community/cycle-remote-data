@@ -2,10 +2,14 @@
   "name": "cycle-remote-data",
   "version": "1.0.0",
   "description": "USAGE: common-readme [-r|--repo REPO-NAME] [-l|--license LICENSE]",
-  "main": "index.js",
+  "main": "lib/src/index.js",
+  "typings": "lib/src/index.d.ts",
   "scripts": {
     "test": "mocha --compilers ts:ts-node/register"
   },
+  "files": [
+    "lib"
+  ],
   "keywords": [],
   "author": "",
   "license": "MIT",
