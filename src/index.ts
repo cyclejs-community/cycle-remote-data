@@ -90,6 +90,8 @@ function requestToResponse(
         } else {
           listener.next(Ok(res));
         }
+
+        listener.complete();
       });
     },
 
