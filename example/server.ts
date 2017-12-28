@@ -1,5 +1,6 @@
 import * as http from 'http';
 import * as fs from 'fs';
+import * as browserify from 'browserify';
 
 const results = [
   {
@@ -26,11 +27,14 @@ const server = http.createServer((req, res) => {
   if (req.url === '/' || req.url === '/index.html') {
     res.writeHead(200, { 'Context-Type': 'text/html' });
     res.end(fs.readFileSync(__dirname + '/index.html'));
+    return;
   }
 
   if (req.url === '/bundle.js') {
-    res.writeHead(200, { 'Context-Type': 'text/html' });
-    res.end(fs.readFileSync(__dirname + '/bundle.js'));
+    const b = browserify('./example/client.ts', {plugin: 'tsify'});
+    res.writeHead(200, { 'Context-Type': 'application/javascript' });
+    b.bundle().pipe(res);
+    return;
   }
 
   const q = (req as any).url.slice(2);
