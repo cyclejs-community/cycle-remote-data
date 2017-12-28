@@ -248,11 +248,11 @@ If a case is not handled, a runtime error can occur. For this reason, it's recom
 
 ## FAQ
 
-*****Doesn't this go against Cycle's idioms? You're using a source method for write effects‽**
+**Doesn't this go against Cycle's idioms? You're using a source method for write effects‽**
 
 Yes, it does conflict with Cycle's current ideology. However, HTTP is a complex problem to model in Cycle, as it is a combination of intertwined read and write effects.
 
-I think it's important to be willing to try different approaches. Perhaps we will find out some non-obvious pros or cons that we never would have encountered if we weren't willing to think differently.
+I think it's important to be willing to try different approaches. Perhaps we will discover subtle tradeoffs that we never would have encountered if we weren't willing to think differently.
 
 
 **Maybe this is okay for GET requests, but do you seriously advocate using it for POST/PUT/DELETE/etc?**
