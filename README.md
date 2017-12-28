@@ -6,6 +6,8 @@
 
 Additionally, it is often useful to be able to show feedback in the UI when loading data, or when data loading has not yet started. This is also not always straightforward with `@cycle/http`.
 
+[krisajenkins](https://github.com/krisajenkins), author of the [Elm library](http://package.elm-lang.org/packages/krisajenkins/remotedata/latest) that inspired this one, has an [excellent blog post](http://blog.jenkster.com/2016/06/how-elm-slays-a-ui-antipattern.html) describing this problem generically.
+
 With `cycle-remote-data`, you can call `sources.RemoteData.request({url: '/search?q=hi', method: 'GET')`, which returns a `MemoryStream` of `RemoteData` objects.
 
 There are four possible states: `Ok`, `Error`, `Loading` and `NotAsked`. When working with `RemoteData` objects, we handle all of these possibilities.
