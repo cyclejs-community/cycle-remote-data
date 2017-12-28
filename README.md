@@ -14,8 +14,15 @@ There are four possible states: `Ok`, `Error`, `Loading` and `NotAsked`. When wo
 
 When using TypeScript in strict mode, the compiler will even catch any cases we fail to handle!
 
-Usage
----
+
+## Install
+
+```bash
+$ npm install cycle-remote-data
+```
+
+## Usage
+
 First, we want to import `makeRemoteDataDriver` and add it to our drivers.
 
 ```ts
@@ -263,10 +270,6 @@ import {RemoteDataSource, RemoteData, RemoteResponse} from 'cycle-remote-data';
 ```
 
 `RemoteResponse` is a shorthand for `RemoteData<superagent.Response>`, which is the type of the items in the stream return by `request`.
-
-## Install
-
-Not yet published.
 
 ## Acknowledgments
 
