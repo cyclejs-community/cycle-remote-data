@@ -147,7 +147,7 @@ function GithubSearch(sources) {
   const post$ = searchWithQuery$
     .map(query =>
       query === ''
-        ? NotAsked
+        ? xs.of(NotAsked)
         : sources.RemoteData.request({
             url: `https://api.github.com/search/repositories?q=${query}`,
             method: 'GET'
