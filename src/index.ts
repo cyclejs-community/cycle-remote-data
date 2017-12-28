@@ -32,27 +32,31 @@ export const NotAsked = {
 };
 
 function Loading<T>(progress: number): RemoteData<T> {
-  return {
+  const loading = {
     when<U>(cases: Cases<any, U>): U {
       return cases.Loading(progress);
     },
 
-    rmap<V>() {
-      return Loading<V>(progress);
+    rmap() {
+      return loading;
     }
   };
+
+  return loading;
 }
 
 function ErrorResponse<T>(err: Error): RemoteData<T> {
-  return {
+  const error = {
     when<U>(cases: Cases<any, U>): U {
       return cases.Error(err);
     },
 
-    rmap<V>() {
-      return ErrorResponse<V>(err);
+    rmap() {
+      return error;
     }
   };
+
+  return error;
 }
 
 function Ok<T>(value: T): RemoteData<T> {
