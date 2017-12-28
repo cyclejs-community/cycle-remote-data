@@ -239,7 +239,22 @@ If a case is not handled, a runtime error can occur. For this reason, it's recom
 `rmap` is used for applying functions to the `Ok` value. A `RemoteData<T>` would have an `Ok` value of type `T`. Applying a function that translates from `T => U` would return a `RemoteData<U>`.
 
 
-### Types
+## FAQ
+
+*****Doesn't this go against Cycle's idioms? You're using a source method for write effects‽**
+
+Yes, it does conflict with Cycle's current ideology. However, HTTP is a complex problem to model in Cycle, as it is a combination of intertwined read and write effects.
+
+I think it's important to be willing to try different approaches. Perhaps we will find out some non-obvious pros or cons that we never would have encountered if we weren't willing to think differently.
+
+
+**Maybe this is okay for GET requests, but do you seriously advocate using it for POST/PUT/DELETE/etc?**
+
+I'm personally not sure. I think it depends on what feedback you need to give the user on the outcome of the request.
+
+If it turns out that this feels very wrong, I'll consider handling POST/PUT/DELETE via sinks instead, like `@cycle/http`.
+
+## Types
 
 `cycle-remote-data` provides a few useful type definitions.
 
