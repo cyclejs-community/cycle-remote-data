@@ -8,7 +8,7 @@ Additionally, it is often useful to be able to show feedback in the UI when load
 
 With `cycle-remote-data`, you can call `sources.RemoteData.request({url: '/search?q=hi', method: 'GET')`, which returns a `MemoryStream` of `RemoteData` objects.
 
-There are four possible states: Loading, Error, Ok and NotAsked. When working with `RemoteData` objects, we handle all of these possibilities.
+There are four possible states: `Ok`, `Error`, `Loading` and `NotAsked`. When working with `RemoteData` objects, we handle all of these possibilities.
 
 When using TypeScript in strict mode, the compiler will even catch any cases we fail to handle!
 
@@ -42,7 +42,7 @@ One nice similarity is that `cycle-remote-data` expects requests in the same for
 
 So we have a stream of `RemoteData` states, but what is a `RemoteData`? If we print it out, we see an object with two methods, `when` and `rmap`.
 
-`RemoteData` is an interface across four possible states, named Ok, Error, Loading and NotAsked. Notice that there is no `type` or identifying information present in a `RemoteData` object.
+`RemoteData` is an interface across four possible states, named `Ok`, `Error`, `Loading` and `NotAsked`. Notice that there is no `type` or identifying information present in a `RemoteData` object.
 
 So how do we work with the data we've loaded? That's where `when` comes into play.
 
@@ -198,6 +198,54 @@ const drivers = {
 
 run(GithubSearch, drivers);
 ```
+
+## API
+
+### `makeRemoteDataDriver()`
+
+This is a function that returns a remote data driver. The remote data driver is also a function, that takes no arguments and returns a `RemoteDataSource`.
+
+### `RemoteDataSource.request(requestOptions)`
+
+The `RemoteDataSource` contains a single function, `request`, which takes a single options argument. For documentation of the options you can pass, please see the [`@cycle/http` docs](https://cycle.js.org/api/http.html).
+
+`RemoteDataSource.request()` returns a `MemoryStream` of `RemoteData<superagent.Response>` states.
+
+### `RemoteData<T>`
+
+`RemoteData<T>` is a generic interface with four possible constructors: Ok, Error, Loading and NotAsked. The only state directly available is `NotAsked`, so that it can be used by users.
+
+`RemoteData<T>` is satisfied by two methods:
+
+#### `when(cases: Cases<T, U>): U`
+
+Takes an object of cases. The following cases must be handled, with the provided signatures:
+
+```ts
+interface Cases<T, U> {
+  Ok(t: T): U;
+  Error(err: Error): U;
+  Loading(progress: number): U;
+  NotAsked(): U;
+}
+```
+
+If a case is not handled, a runtime error can occur. For this reason, it's recommended to use TypeScript in strict mode.
+
+#### `rmap(f: (t: T) => U): RemoteData<U>`
+
+`rmap` is used for applying functions to the `Ok` value. A `RemoteData<T>` would have an `Ok` value of type `T`. Applying a function that translates from `T => U` would return a `RemoteData<U>`.
+
+
+### Types
+
+`cycle-remote-data` provides a few useful type definitions.
+
+```ts
+import {RemoteDataSource, RemoteData, RemoteResponse} from 'cycle-remote-data';
+```
+
+`RemoteResponse` is a shorthand for `RemoteData<superagent.Response>`, which is the type of the items in the stream return by `request`.
 
 ## Install
 
