@@ -25,6 +25,7 @@
     "xstream": "^11.0.0"
   },
   "dependencies": {
+    "@cycle/http": "^14.8.0",
     "@types/superagent": "^3.5.6"
   }
 }

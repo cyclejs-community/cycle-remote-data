@@ -36,7 +36,7 @@ describe('remoteDataDriver', () => {
       {hello: 'world'}
     ]
 
-    driver.get('localhost:8090').map(f).take(states.length).addListener({
+    driver.request({method: 'GET', url: 'localhost:8090'}).map(f).take(states.length).addListener({
       next (actual) {
         const expected = states.shift();
 
@@ -64,7 +64,7 @@ describe('remoteDataDriver', () => {
       {status: 'error'}
     ]
 
-    driver.get('localhost:8090/err').map(f).take(states.length).addListener({
+    driver.request({method: 'GET', url: 'localhost:8090/err'}).map(f).take(states.length).addListener({
       next (actual) {
         const expected = states.shift();
 

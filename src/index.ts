@@ -1,56 +1,59 @@
+import { RequestOptions } from '@cycle/http';
+import { optionsToSuperagent } from '@cycle/http/lib/cjs/http-driver';
 import * as superagent from 'superagent';
-import xs, {MemoryStream} from 'xstream';
+import xs, { MemoryStream } from 'xstream';
 
 export interface RemoteDataSource {
-  get(url: string): MemoryStream<RemoteResponse>;
+  request(options: RequestOptions): MemoryStream<RemoteResponse>;
 }
 
 interface Cases<T, U> {
   NotAsked: () => U;
-  Loading: () => U;
+  Loading: (progress: number) => U;
   Error: (err: Error) => U;
   Ok: (value: T) => U;
 }
 
 export interface RemoteData<T> {
   when<U>(cases: Cases<T, U>): U;
-  rmap<V>(f: (v: T) => V): RemoteData<V>;
-};
+  rmap<V>(f: (t: T) => V): RemoteData<V>;
+}
 
 export type RemoteResponse = RemoteData<superagent.Response>;
 
 export const NotAsked = {
-  when<U> (cases: Cases<any, U>): U {
+  when<U>(cases: Cases<any, U>): U {
     return cases.NotAsked();
   },
 
-  rmap () {
+  rmap() {
     return NotAsked;
   }
+};
+
+function Loading<T>(progress: number): RemoteData<T> {
+  return {
+    when<U>(cases: Cases<any, U>): U {
+      return cases.Loading(progress);
+    },
+
+    rmap<V>() {
+      return Loading<V>(progress);
+    }
+  };
 }
 
-const Loading = {
-  when<U> (cases: Cases<any, U>): U {
-    return cases.Loading();
-  },
-
-  rmap () {
-    return Loading;
-  }
-}
-
-function ErrorResponse (err: Error): RemoteData<any> {
+function ErrorResponse<T>(err: Error): RemoteData<T> {
   return {
     when<U>(cases: Cases<any, U>): U {
       return cases.Error(err);
     },
 
-    rmap () {
-      return ErrorResponse(err);
+    rmap<V>() {
+      return ErrorResponse<V>(err);
     }
-  }
+  };
 }
-
 
 function Ok<T>(value: T): RemoteData<T> {
   return {
@@ -58,40 +61,46 @@ function Ok<T>(value: T): RemoteData<T> {
       return cases.Ok(value);
     },
 
-    rmap<V> (f: (t: T) => V): RemoteData<V> {
+    rmap<V>(f: (t: T) => V): RemoteData<V> {
       return Ok(f(value));
     }
-  }
+  };
 }
 
+function requestToResponse(
+  requestOptions: RequestOptions
+): MemoryStream<RemoteData<superagent.Response>> {
+  let request: superagent.Request;
 
-export function makeRemoteDataDriver () {
-  return function remoteDataDriver (): RemoteDataSource {
-    const remoteDataSources = {
-      get(url: string): MemoryStream<RemoteData<superagent.Response>> {
-        let request: superagent.Request;
+  return xs.createWithMemory({
+    start(listener) {
+      request = optionsToSuperagent(requestOptions);
 
-        return xs.createWithMemory({
-          start (listener) {
-            listener.next(Loading)
+      listener.next(Loading(0));
 
-            request = superagent.get(url).end((err, res) => {
-              if (err) {
-                listener.next(ErrorResponse(err));
-              } else {
-                listener.next(Ok(res));
-              }
-            });
-          },
-
-          stop () {
-            request.abort();
-          }
-        })
-
+      if (requestOptions.progress) {
+        request = request.on('progress', ev =>
+          listener.next(Loading(ev.percent || 0))
+        );
       }
-    }
 
-    return remoteDataSources;
-  }
+      request.end((err, res) => {
+        if (err) {
+          listener.next(ErrorResponse(err));
+        } else {
+          listener.next(Ok(res));
+        }
+      });
+    },
+
+    stop() {
+      request.abort();
+    }
+  });
+}
+
+export function makeRemoteDataDriver() {
+  return function remoteDataDriver(): RemoteDataSource {
+    return { request: requestToResponse };
+  };
 }

@@ -46,7 +46,7 @@ function GithubSearch(sources: Sources) {
         return xs.of(NotAsked).remember();
       }
 
-      return sources.RemoteData.get(`/?${query}`);
+      return sources.RemoteData.request({url: `/?${query}`, method: 'GET'});
     })
     .flatten();
 
@@ -68,7 +68,7 @@ function view([remotePost, loadingProgress]: [RemoteData<Result[]>, number]) {
     button('.search', 'Search'),
 
     remotePost.when({
-      Loading: () => loadingView(loadingProgress),
+      Loading: (progress) => loadingView(loadingProgress),
       Error: errorView,
       Ok: resultsView,
       NotAsked: notAskedView
