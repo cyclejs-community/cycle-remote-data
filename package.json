@@ -1,6 +1,6 @@
 {
   "name": "cycle-remote-data",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "USAGE: common-readme [-r|--repo REPO-NAME] [-l|--license LICENSE]",
   "main": "lib/src/index.js",
   "typings": "lib/src/index.d.ts",
