@@ -19,6 +19,10 @@ export interface RemoteData<T> {
   rmap<V>(f: (t: T) => V): RemoteData<V>;
 }
 
+export function rmap<T, U>(f: (t: T) => U): (r: RemoteData<T>) => RemoteData<U> {
+  return r => r.rmap(f);
+}
+
 export type RemoteResponse = RemoteData<superagent.Response>;
 
 export const NotAsked = {
@@ -30,6 +34,8 @@ export const NotAsked = {
     return NotAsked;
   }
 };
+
+export const NotAsked$ = xs.of(NotAsked).remember();
 
 function Loading<T>(progress: number): RemoteData<T> {
   const loading = {

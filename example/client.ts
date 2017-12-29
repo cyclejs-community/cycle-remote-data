@@ -1,8 +1,10 @@
 import {
   makeRemoteDataDriver,
+  rmap,
   RemoteDataSource,
   RemoteResponse,
   NotAsked,
+  NotAsked$,
   RemoteData
 } from '../src';
 import { makeDOMDriver, DOMSource, div, input, button, pre } from '@cycle/dom';
@@ -41,21 +43,15 @@ function GithubSearch(sources: Sources) {
   const loadingProgress$ = sources.Time.periodic(300).map(i => i % 3 + 1);
 
   const remoteData$ = data$
-    .map(query => {
-      if (query === '') {
-        return xs.of(NotAsked).remember();
-      }
-
-      return sources.RemoteData
-        .request({ url: `/?${query}`, method: 'GET' })
-        .debug('hi');
-    })
+    .map(query =>
+      query === ''
+        ? NotAsked$
+        : sources.RemoteData.request({ url: `/?${query}`, method: 'GET' })
+    )
     .flatten();
 
   const post$ = remoteData$
-    .map((remoteData: RemoteResponse) =>
-      remoteData.rmap(res => res.body as Result[])
-    )
+    .map(rmap(res => res.body as Result[]))
     .startWith(NotAsked);
 
   return {
@@ -65,7 +61,7 @@ function GithubSearch(sources: Sources) {
 
 function view([remotePost, loadingProgress]: [RemoteData<Result[]>, number]) {
   return div([
-    div('Search github'),
+    div('Search:'),
     input('.search-query'),
     button('.search', 'Search'),
 
