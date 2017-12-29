@@ -25,7 +25,7 @@ $ npm install cycle-remote-data
 
 First, we want to import `makeRemoteDataDriver` and add it to our drivers.
 
-```ts
+```js
 import { makeRemoteDataDriver } from 'cycle-remote-data';
 
 const drivers = {
@@ -36,7 +36,7 @@ const drivers = {
 
 Then, inside of our main, we can use `sources.RemoteData.request` to make requests.
 
-```ts
+```js
 function main(sources) {
   const results$ = sources.RemoteData.request({
     method: 'GET',
@@ -58,7 +58,7 @@ So how do we work with the data we've loaded? That's where `when` comes into pla
 Let's map over our `result$` and put it into a `view`.
 
 
-```ts
+```js
 function main(sources) {
   const results$ = sources.RemoteData.request({
     method: 'GET',
@@ -73,7 +73,7 @@ function main(sources) {
 
 So how do we define our view?
 
-```ts
+```js
 function view(remoteData) {
   return remoteData.when({
     Ok: response => div(JSON.stringify(response.body)),
@@ -96,7 +96,7 @@ The above example does have an ugly part, in that we are working with responses 
 
 This is where `rmap` is handy. We could alter our main function to pull the body off of the response.
 
-```ts
+```js
 function main(sources) {
   const response$ = sources.RemoteData.request({
     method: 'GET',
@@ -119,8 +119,8 @@ When you call `RemoteData.request`, you're actually getting a `MemoryStream<Remo
 
 This is a larger example that includes a `reload` button on errors, uses a `NotAsked` state at the start, and cancels old requests when new searches are made.
 
-```ts
-import {makeRemoteDataDriver, NotAsked} from '../src';
+```js
+import {makeRemoteDataDriver, NotAsked, NotAsked$} from 'cycle-remote-data';
 import {makeDOMDriver, div, input, button} from '@cycle/dom';
 import {timeDriver} from '@cycle/time';
 import {run} from '@cycle/run';
@@ -147,7 +147,7 @@ function GithubSearch(sources) {
   const post$ = searchWithQuery$
     .map(query =>
       query === ''
-        ? xs.of(NotAsked)
+        ? NotAsked$
         : sources.RemoteData.request({
             url: `https://api.github.com/search/repositories?q=${query}`,
             method: 'GET'
@@ -265,7 +265,7 @@ If it turns out that this feels very wrong, I'll consider handling POST/PUT/DELE
 
 `cycle-remote-data` provides a few useful type definitions.
 
-```ts
+```js
 import {RemoteDataSource, RemoteData, RemoteResponse} from 'cycle-remote-data';
 ```
 
