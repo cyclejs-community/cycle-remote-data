@@ -24,7 +24,7 @@ describe('remoteDataDriver', () => {
 
     function f (remoteData: RemoteResponse) {
       return remoteData.when({
-        Ok (response) { return response.body },
+        Ok (response) { return {status: 'success ' + response.body} },
         Loading () { return {status: 'loading'} },
         Error () { return {status: 'error'} },
         NotAsked () { return {status: 'not asked'} }
@@ -33,14 +33,14 @@ describe('remoteDataDriver', () => {
 
     const states = [
       {status: 'loading'},
-      {hello: 'world'}
+      {status: 'success hello world'}
     ]
 
     driver.request({method: 'GET', url: 'localhost:8090'}).map(f).take(states.length).addListener({
       next (actual) {
         const expected = states.shift();
 
-        assert.deepEqual(actual, expected);
+        assert.deepEqual(actual.status, (expected as any).status);
       },
       error: done,
       complete: done
@@ -52,9 +52,9 @@ describe('remoteDataDriver', () => {
 
     function f (remoteData: RemoteResponse) {
       return remoteData.when({
-        Ok (response) { return response.body },
+        Ok (response) { return {status: 'success ' + response.body} },
         Loading () { return {status: 'loading'} },
-        Error () { return {status: 'error'} },
+        Error (error) { return {status: 'error', error} },
         NotAsked () { return {status: 'not asked'} }
       });
     }
@@ -68,7 +68,11 @@ describe('remoteDataDriver', () => {
       next (actual) {
         const expected = states.shift();
 
-        assert.deepEqual(actual, expected);
+        assert.deepEqual(actual.status, (expected as any).status);
+
+        if (actual.status === 'error') {
+          assert.equal((actual as any).error.response.request.url, 'localhost:8090/err');
+        }
       },
       error: done,
       complete: done

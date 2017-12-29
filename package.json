@@ -6,7 +6,7 @@
   "typings": "lib/src/index.d.ts",
   "scripts": {
     "prepare": "tsc",
-    "test": "mocha --compilers ts:ts-node/register"
+    "test": "mocha --compilers ts:ts-node/register && markdown-doctest"
   },
   "files": [
     "lib"

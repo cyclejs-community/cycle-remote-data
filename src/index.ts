@@ -1,4 +1,4 @@
-import { RequestOptions } from '@cycle/http';
+import { Response, RequestOptions } from '@cycle/http/lib/cjs/interfaces';
 import { optionsToSuperagent } from '@cycle/http/lib/cjs/http-driver';
 import * as superagent from 'superagent';
 import xs, { MemoryStream } from 'xstream';
@@ -10,7 +10,7 @@ export interface RemoteDataSource {
 export interface Cases<T, U> {
   NotAsked: () => U;
   Loading: (progress: number) => U;
-  Error: (err: Error) => U;
+  Error: (err: ResponseError) => U;
   Ok: (value: T) => U;
 }
 
@@ -23,7 +23,11 @@ export function rmap<T, U>(f: (t: T) => U): (r: RemoteData<T>) => RemoteData<U> 
   return r => r.rmap(f);
 }
 
-export type RemoteResponse = RemoteData<superagent.Response>;
+export type RemoteResponse = RemoteData<Response>;
+
+export interface ResponseError extends Error {
+  response: Response;
+}
 
 export const NotAsked = {
   when<U>(cases: Cases<any, U>): U {
@@ -51,7 +55,7 @@ function Loading<T>(progress: number): RemoteData<T> {
   return loading;
 }
 
-function ErrorResponse<T>(err: Error): RemoteData<T> {
+function ErrorResponse<T>(err: ResponseError): RemoteData<T> {
   const error = {
     when<U>(cases: Cases<any, U>): U {
       return cases.Error(err);
@@ -79,7 +83,7 @@ function Ok<T>(value: T): RemoteData<T> {
 
 function requestToResponse(
   requestOptions: RequestOptions
-): MemoryStream<RemoteData<superagent.Response>> {
+): MemoryStream<RemoteResponse> {
   let request: superagent.Request;
 
   return xs.createWithMemory({
@@ -94,8 +98,12 @@ function requestToResponse(
         );
       }
 
-      request.end((err, res) => {
+      request.end((err: ResponseError, res: Response) => {
+        res.request = requestOptions;
+
         if (err) {
+          err.response = res;
+
           listener.next(ErrorResponse(err));
         } else {
           listener.next(Ok(res));

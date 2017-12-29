@@ -113,7 +113,7 @@ function main(sources) {
 
 `remoteData.rmap` takes a function that transforms the response. This is why `RemoteData` is actually a generic interface in TypeScript.
 
-When you call `RemoteData.request`, you're actually getting a `MemoryStream<RemoteData<superagent.Response>>`. Calling `.rmap` on the `RemoteData` will return a `RemoteData` with the generic type of the return value of your `rmap` function.
+When you call `RemoteData.request`, you're actually getting a `MemoryStream<RemoteData<Response>>`, where `Response` comes from `@cycle/http` and has an attached `request`. Calling `.rmap` on the `RemoteData` will return a `RemoteData` with the generic type of the return value of your `rmap` function.
 
 ## Example
 
@@ -233,11 +233,13 @@ Takes an object of cases. The following cases must be handled, with the provided
 ```ts
 interface Cases<T, U> {
   Ok(t: T): U;
-  Error(err: Error): U;
+  Error(err: ResponseError): U;
   Loading(progress: number): U;
   NotAsked(): U;
 }
 ```
+
+A `ResponseError` is a superagent error which has a `Response` attached.
 
 If a case is not handled, a runtime error can occur. For this reason, it's recommended to use TypeScript in strict mode.
 
