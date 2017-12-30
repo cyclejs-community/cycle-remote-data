@@ -1,10 +1,17 @@
 import { Response, RequestOptions } from '@cycle/http/lib/cjs/interfaces';
 import { optionsToSuperagent } from '@cycle/http/lib/cjs/http-driver';
 import * as superagent from 'superagent';
-import xs, { MemoryStream } from 'xstream';
+import xs, { Listener, MemoryStream } from 'xstream';
 
 export interface RemoteDataSource {
   request(options: RequestOptions): MemoryStream<RemoteResponse>;
+}
+
+export type RemoteResponse = RemoteData<Response>;
+
+export interface RemoteData<T> {
+  when<U>(cases: Cases<T, U>): U;
+  rmap<V>(f: (t: T) => V): RemoteData<V>;
 }
 
 export interface Cases<T, U> {
@@ -14,19 +21,12 @@ export interface Cases<T, U> {
   Ok: (value: T) => U;
 }
 
-export interface RemoteData<T> {
-  when<U>(cases: Cases<T, U>): U;
-  rmap<V>(f: (t: T) => V): RemoteData<V>;
+export interface ResponseError extends Error {
+  response: Response;
 }
 
 export function rmap<T, U>(f: (t: T) => U): (r: RemoteData<T>) => RemoteData<U> {
   return r => r.rmap(f);
-}
-
-export type RemoteResponse = RemoteData<Response>;
-
-export interface ResponseError extends Error {
-  response: Response;
 }
 
 export const NotAsked = {
