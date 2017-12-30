@@ -98,25 +98,29 @@ function requestToResponse(
         );
       }
 
-      request.end((err: ResponseError, res: Response) => {
-        res.request = requestOptions;
-
-        if (err) {
-          err.response = res;
-
-          listener.next(ErrorResponse(err));
-        } else {
-          listener.next(Ok(res));
-        }
-
-        listener.complete();
-      });
+      request.end(processResponse(requestOptions, listener));
     },
 
     stop() {
       request.abort();
     }
   });
+}
+
+function processResponse(request: RequestOptions, listener: Listener<RemoteResponse>) {
+  return (error: ResponseError | null, response: Response) => {
+    response.request = request;
+
+    if (error) {
+      error.response = response;
+
+      listener.next(ErrorResponse(error));
+    } else {
+      listener.next(Ok(response));
+    }
+
+    listener.complete();
+  }
 }
 
 export function makeRemoteDataDriver() {
